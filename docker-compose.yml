@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  gogsdb:
+    image: postgres:9.5
+    restart: always
+    environment:
+      - "POSTGRES_USER=gogs"
+      - "POSTGRES_PASSWORD=gogs"
+      - "POSTGRES_DB=gogs"
+      - "PGDATA=/data"
+    volumes:
+       - ./data/gogs-db:/data:z
+  gogs:
+    image: gogs/gogs:latest
+    restart: always
+    ports:
+      - "22:22"
+      - "3000:3000"
+    links:
+      - gogsdb
+    environment:
+      - RUN_CROND=true
+    volumes:
+      - "./gogs/app.ini:/data/gogs/conf/app.ini"
+      - "./data/gogs-data:/data"
+    depends_on:
+      - gogsdb
+    healthcheck:
+      test: xcurl --fail http://gogs:3000 || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+  jenkins:
+      build:
+        context: jenkins
+        args:
+          admin_username: ccadmin
+          admin_password: ${ccadminpassword}
+      env_file:
+        - ./jenkins/jenkins.env
+      ports:
+        - "8080:8080"
+  init:
+    build: 
+      context: init
+    depends_on:
+      - gogs
+    links:
+      - gogs
+    environment:
+      gogs_host: gogs
+      gogs_url: http://gogs:3000
+      jenkins_url: http://jenkins:8080
+      admin_username: ccadmin
+      admin_password: ${ccadminpassword}
+      admin_email: ccadmin@abc.com
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock
+      - ./platform-templates:/platform-templates
+      # - ./data/init/root:/root:rw
+    restart: on-failure

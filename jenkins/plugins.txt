@@ -1,0 +1,16 @@
+strict-crumb-issuer
+ansible
+ansicolor
+configuration-as-code
+folder-properties
+job-dsl
+material-theme
+parameterized-trigger
+permissive-script-security
+pipeline-utility-steps
+simple-theme-plugin
+ssh-agent
+theme-manager
+timestamper
+workflow-aggregator
+gogs-webhook

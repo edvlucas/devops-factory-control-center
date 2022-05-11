@@ -1,0 +1,73 @@
+jenkins:
+  numExecutors: 1
+  crumbIssuer:
+    strict:
+      checkSessionMatch: false
+  remotingSecurity:
+    enabled: false
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+        - id: "#admin_username#"
+          name: "#admin_username#"
+          password: "#admin_password#"
+          properties:
+            - "apiToken"
+            - "theme"
+            - "myView"
+            - preferredProvider:
+                providerId: "default"
+            - "timezone"
+            - mailer:
+                emailAddress: "abc@def.com"
+unclassified:
+  location:
+    url: "${JENKINS_HOST}"
+  themeManager:
+    disableUserThemes: true
+    theme: "material-indigo"
+security:
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: false
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - basicSSHUserPrivateKey:
+              scope: "GLOBAL"
+              id: "jenkins-gogs"
+              username: "jenkins-gogs"
+              passphrase: ""
+              description: "Access to Gogs"
+              privateKeySource:
+                directEntry:
+                  privateKey: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    MIIEowIBAAKCAQEAuz9jdZk81Loa2uuhNObod7cgf075tYGY+stL3VIb5UXn0Y+5
+                    yQEZnfztMoaROq5n1JwVb8jbmMfnYF5Z1mRofpVobssm3N6ljAgYEyeEQKwMIpoS
+                    QwGZnm94dRQ0axI750dFLzvrLcO7CvrF/lHfpAEO1ycvl80+UtEAqf182m5e1FwG
+                    VQi9Kr7XTxh3L+Y3K17JyElCFNKS7e7yEdpGcWxqdPQNV8WMCWCyY3RRnblu5CrR
+                    oPyu3QWRB5e9Z01viJHOXw+pHwvaPMtyWEKFz3ZG4YhhCZkq0J7LLjEtxBVIqKF4
+                    LqaIZkgcdf8UPIbjlyTd27CfFoSVXgcjg1PgKQIDAQABAoIBAE36C9VBR0/fYKei
+                    ULPTJSQVovbhUKQBoE9wsdstAmjsP6nJjLjkOGLOnYjY+UnSr3KevV6b6rcpKHW9
+                    VPQvRETSu3bIKxr3rUEvbbcsUasM+tC+ELTOycZs7WD0VQ/xu/iIeYs+DKY2SII+
+                    BI3wUo3d0uxOaUdyNW4Pk5M2+PONIx7ZpLCavAfDlF6UHaUsNuC13+CN8LxL3Q6E
+                    Yp7e9/zhloTdwgyqbOSFxvwUI/oHyl3lxa18oqYuftsDGIFnOMN5UKjO08coh80K
+                    4dXc5FjWTsN05t7J2+Dzq9hQ5Gm3G7ntgDAHxIc0HUFg2jcfvfG89/NYghMDLSV9
+                    3Ixw3MECgYEA+NpjI/qJ5jT6+TOcluuTuBRZKswLOru4fby+kD58EkpnZuCi+1YB
+                    xuWBtvmbblfHKPZstsHgT3JDh+s9T/BAgd2rOT1y3NmKZQOt42Ahdya1TbkOb6Li
+                    xp9FprCQ7AVadfV2TYQvY8lglIcxUnQuw97nf/VqFFqQSKjdf3XKBWUCgYEAwKAR
+                    FskcOxPvWiqP/BhBkwq+7XRm/RWFwL/dVuByln6Adf4ojwnwjfU1W6w6g8OagoIF
+                    XBaoDxj0CkwZHAqoR22SwuLO/pFBiIf+w9QCWFUiTeZLPv7sxUTAFyI4UbREIh7N
+                    a+YpDu+XwkM96JQipc2GGj9rTGFU1mZ+ASgDtXUCgYEAiCdskNXWNzcLjec4KLax
+                    tsijVLAZAMSOl3T6So91cMh2tKn5YkxXYoxVoVgGO6QZGodhScjfwngBDM+fVypb
+                    EPLIaOP/AWiguM3/iOUiyj9KeUDj7h6Ptx6TjDUUxZ3UNa/cT2MgTpdymTEywitB
+                    HvfJb5BFvuciBC8oKUG4C6UCgYACn+u7sL/Wuj3Pr7bIi5gRJdtWJvjkR+/LoZGl
+                    hmdpT432jaEF2e/SL14rwpwFgZvQXW8vQwvFMOTaYxEQhcCnQIH4b9i8NUR8VMYO
+                    6wuhIn/WKeYqlJSrV3V6mzfDPT6UbHEGIFu83VznA72LNsGGGtfR8b1HjCf4x+q9
+                    n0r1pQKBgHi0uxEiEEU+9pkhX4ApLwIJ2yO9P9VYSvYV6I+L59v6TCymT1XaZRNK
+                    oUki6ezXEN5EcE/1ZtpxqdffW8DS+unRZ6SNrC3gEfsLq8AWuO8THRXEWsxW45Fk
+                    6XIYGsRLRnLe1opwTisAtiaSKyy4wVa7hJwZS4kvcjQV63bP1jCE
+                    -----END RSA PRIVATE KEY-----

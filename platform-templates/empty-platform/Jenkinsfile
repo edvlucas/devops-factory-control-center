@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('shared') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+        stage('monitoring') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+        stage('ops') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+        stage('engineering') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+        stage('quality') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+        stage('docs') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+        stage('application-platform') {
+            steps {
+                echo 'provisioning'
+                echo 'configuring'
+                echo 'testing'
+            }
+        }
+    }
+}
