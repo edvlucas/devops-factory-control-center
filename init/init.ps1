@@ -6,7 +6,7 @@ param(
   $admin_username = "ccadmin",
   $admin_email = "ccadmin@abc.com",
   $admin_password,
-  $templates_path,
+  $templates_path = "/platform-templates",
   $force_recreate_template = $false)
 
 function get-gogs-token($token_username, $token_password, $token_name) {
