@@ -7,6 +7,7 @@ param(
   $admin_email = "ccadmin@abc.com",
   $admin_password,
   $templates_path = "/platform-templates",
+  $coder_platforms_path = "/home/coder/platforms",
   $force_recreate_template = $false)
 
 function get-gogs-token($token_username, $token_password, $token_name) {
@@ -104,30 +105,47 @@ foreach ($template in Get-ChildItem -Path "$templates_path") {
       Invoke-WebRequest -Uri "$gogs_url/api/v1/repos/$admin_username/$templatename/hooks" -Headers $Headers -Method POST -ContentType "application/json" -Body $body
     }
 
-    # Create a ssh key to be used by the init container to access Gogs using ssh
+    # Create a ssh key to be used by the init container & coder to access Gogs using ssh
     if (!(Test-Path ~/.ssh/id_rsa.pub)) {
       Write-Host "Creating init container ssh key"
-      ssh-keygen -t rsa -b 1024 -f /root/.ssh/id_rsa -q -N '""'
+      docker exec -u coder controlcenter-codeserver-1 ssh-keygen -t rsa -b 1024 -f /home/coder/.ssh/id_rsa -q -N '""'
+      docker exec -u coder controlcenter-codeserver-1 ssh-keyscan -H $gogs_host >> /home/coder/.ssh/known_hosts
+    
+      Write-Host "Displaying /home/coder/.ssh content"
+      docker exec -u coder controlcenter-codeserver-1 bash -c "ls /home/coder/.ssh -ls"
     }
-    Write-Host "Adding ssh key to repository"
-    $currentUserSshKey = get-content -path "~\.ssh\id_rsa.pub"
-    Invoke-WebRequest -Uri "$gogs_url/api/v1/user/keys" -Headers $Headers -Method POST -ContentType "application/json" -Body "{`"title`":`"$admin_username`", `"key`":`"$currentUserSshKey`"}"
 
-    # Add, commit and push the files to the repo
-    Write-Host "Copying template files to repository"
-    mkdir -p ~/temp
-    cd ~/temp
-    ssh-keyscan -H $gogs_host >> ~/.ssh/known_hosts
-    git clone "git@${gogs_host}:$admin_username/$templatename.git"
-    write-host "$templates_path/$templatename"
-    Copy-Item -Path $templates_path/$templatename/* -Destination ~/temp/$templatename -Recurse -Force
-    cd $templatename
-    git config --global user.email $admin_email
-    git config --global user.name "Initialization script"
-    git add .
-    git commit -m "Initial commit"
-    git push
-    cd $PSScriptRoot
+    Write-Host "Adding init container ssh key to gogs"
+    $currentUserSshKey = get-content -path "/home/coder/.ssh/id_rsa.pub"
+    Invoke-WebRequest -Uri "$gogs_url/api/v1/user/keys" -Headers $Headers -Method POST -ContentType "application/json" -Body "{`"title`":`"${admin_username}_coder`", `"key`":`"$currentUserSshKey`"}"
+
+    Write-Host "Configuring coder git"
+    docker exec -u coder controlcenter-codeserver-1 git config --global user.email $admin_email
+    docker exec -u coder controlcenter-codeserver-1 git config --global user.name "Initialization script"
+
+    # Write-Host "Cleaning $coder_platforms_path"
+    # Get-ChildItem -Path $coder_platforms_path -Recurse| Foreach-object { Remove-item -Recurse -path $_.FullName }
+
+    Write-Host "Cloning $templatename in coder"
+    docker exec -u coder controlcenter-codeserver-1 bash -c "echo 'ssh folder content:' && ls /home/coder/.ssh -ls"
+    docker exec -u coder controlcenter-codeserver-1 bash -c "echo '/home/coder/platforms folder content:' && ls /home/coder/platforms -ls"
+    docker exec -u coder controlcenter-codeserver-1 bash -c "echo 'cloning' && cd /home/coder/platforms && ls -la && git clone git@${gogs_host}:$admin_username/$templatename.git"
+    start-sleep 5 # wait until the clone operation is finished
+
+    Write-Host "Add template files to local repository"
+    dir $templates_path
+    dir $templates_path/$templatename
+    Copy-Item -Path $templates_path/$templatename -Destination $coder_platforms_path -Recurse -Force
+    docker exec -u coder controlcenter-codeserver-1 bash -c "ls $coder_platforms_path -ls"
+
+    Write-Host "git add"
+    docker exec -u coder controlcenter-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git add ."
+
+    Write-Host "git commit"
+    docker exec -u coder controlcenter-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git commit -m 'Initial commit'"
+
+    Write-Host "git push"
+    docker exec -u coder controlcenter-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git push"
 
     # Create the Jenkins job according to the template Jenkins-pieline-config.xml file
     Write-Host "Creating Jenkins job"

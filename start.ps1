@@ -6,6 +6,7 @@ if ($reset) {
   docker-compose down
   docker system prune -f
   if (Test-Path -path ./data) { Remove-Item -LiteralPath "./data" -Force -Recurse }
+  Get-ChildItem -Path ./platforms -Recurse| Foreach-object { Remove-item -Recurse -path $_.FullName }
 }
 # $env:BUILDKIT_PROGRESS = "plain"
 $env:ccadminpassword = $ccadminpassword
