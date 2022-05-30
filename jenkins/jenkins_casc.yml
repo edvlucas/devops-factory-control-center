@@ -1,5 +1,5 @@
 jenkins:
-  numExecutors: 1
+  numExecutors: 3
   crumbIssuer:
     strict:
       checkSessionMatch: false

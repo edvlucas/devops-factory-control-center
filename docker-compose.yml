@@ -42,6 +42,8 @@ services:
         - ./jenkins/jenkins.env
       ports:
         - "8080:8080"
+      volumes:
+        - //var/run/docker.sock:/var/run/docker.sock
   codeserver:
       image:  codercom/code-server:latest
       volumes:
@@ -51,7 +53,7 @@ services:
       ports:
         - 8081:8080
   init:
-    build: 
+    build:
       context: init
     depends_on:
       - gogs

@@ -1,54 +1,40 @@
 pipeline {
     agent any
-
     stages {
-        stage('shared') {
+        stage('ansible') {
+            agent { dockerfile { filename 'Dockerfile.ansible' } }   
             steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
+                sh 'ansible-playbook --version'
             }
         }
-        stage('monitoring') {
+        stage('bicep') {
+            agent { dockerfile { filename 'Dockerfile.bicep' } }   
             steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
+                sh 'bicep --help'
             }
         }
-        stage('ops') {
+        stage('node') {
+            agent { dockerfile { filename 'Dockerfile.node' } }   
             steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
+                sh 'node --version'
             }
         }
-        stage('engineering') {
+        stage('powershellcore') {
+            agent { dockerfile { filename 'Dockerfile.powershellcore' } }   
             steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
+                sh '$PSVersionTable'
             }
         }
-        stage('quality') {
+        stage('python') {
+            agent { dockerfile { filename 'Dockerfile.python' } }   
             steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
+                sh 'python --version'
             }
         }
-        stage('docs') {
+        stage('terraform') {
+            agent { dockerfile { filename 'Dockerfile.terraform' } }   
             steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
-            }
-        }
-        stage('application-platform') {
-            steps {
-                echo 'provisioning'
-                echo 'configuring'
-                echo 'testing'
+                sh 'tf'
             }
         }
     }
