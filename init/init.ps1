@@ -162,3 +162,18 @@ foreach ($template in Get-ChildItem -Path "$templates_path") {
     Invoke-RestMethod -Uri $uri -Method POST -ContentType "application/xml" -Body $body -Headers $headers
   }
 }
+
+# Replace the code server password with the one provided
+Write-Host "Replacing the ccadmin password in the local folder /home/coder/config/config.yaml" -ForegroundColor DarkCyan
+$configLines = Get-Content -Path "/home/coder/config/config.yaml" -Encoding ASCII
+$output = @()
+$configLines | ForEach-Object { 
+  if ($_ -match "password:") {
+    $output += "password: $admin_password"
+  } else {
+    $output += $_
+  } 
+} 
+$output | Set-Content -Path "/home/coder/config/config.yaml" -Encoding ASCII
+docker restart devops-factory-control-center-codeserver-1
+

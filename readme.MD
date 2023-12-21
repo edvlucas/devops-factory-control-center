@@ -28,7 +28,7 @@ Jenkins, Gogs and VSCode are pre-configured and connected to each other.
 After running the composition you can access the following services using your web browser:
 - Jenkins: http://localhost:8080
 - Gogs: http://localhost:3000 - Use the username ccadmin and the password supplied when running start.ps1
-- VSCode: http://localhost:8081 - The password is generated  in data/coder-config/code-server/config.yaml
+- VSCode: http://localhost:8081 - The password is supplied when running start.ps1
 
 # Making changes to the empty-platform platform template
 - Open the empty platform code in [VSCode](http://localhost:8081/?folder=/home/coder/platforms/empty-platform)

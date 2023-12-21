@@ -83,6 +83,7 @@ services:
       - ./platform-templates:/platform-templates
       - ./platforms:/platforms:rw
       - ./data/coder-ssh:/home/coder/.ssh
+      - ./data/coder-config/code-server:/home/coder/config
     volumes_from:
       - codeserver:rw # import /home/coder/.config; /home/coder/.ssh; /home/platforms
       # - ./data/init/root:/root:rw
