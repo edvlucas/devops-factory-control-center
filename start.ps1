@@ -6,9 +6,14 @@ if ($reset) {
   docker-compose down
   docker system prune -f
   if (Test-Path -path ./data) { Remove-Item -LiteralPath "./data" -Force -Recurse }
-  # Get-ChildItem -Path ./platforms -Recurse| Foreach-object { Remove-item -Recurse -path $_.FullName }
+  Get-ChildItem -Path ./platforms -Recurse| Foreach-object { Remove-item -Recurse -path $_.FullName }
   wsl -e "rm -rf platforms/empty-platform/.git"
 }
+
 # $env:BUILDKIT_PROGRESS = "plain"
+
+
 $env:ccadminpassword = $ccadminpassword
-docker-compose up --build
+docker-compose up --build -d
+docker logs -f devops-factory-control-center-init-1
+

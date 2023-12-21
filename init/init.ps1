@@ -5,7 +5,7 @@ param(
   $jenkins_url = "http://jenkins:8080",
   $admin_username = "ccadmin",
   $admin_email = "ccadmin@abc.com",
-  $admin_password,
+  $admin_password = "123",
   $templates_path = "/platform-templates",
   $coder_platforms_path = "/home/coder/platforms",
   $force_recreate_template = $false)
@@ -62,18 +62,18 @@ do {
 Write-Host "Gogs is up and running ($statusCode), starting configuration"
 
 # Create the first admin user and the jenkins user
-docker exec -u git controlcenter-gogs-1 ./gogs admin create-user --name="$admin_username" --password="$admin_password" --email="$admin_email" --admin
-docker exec -u git controlcenter-gogs-1 ./gogs admin create-user --name="$jenkins_username" --password="$jenkins_password" --email="dummy@jenkins.com" --admin
+docker exec -u git devops-factory-control-center-gogs-1 ./gogs admin create-user --name="$admin_username" --password="$admin_password" --email="$admin_email" --admin
+docker exec -u git devops-factory-control-center-gogs-1 ./gogs admin create-user --name="$jenkins_username" --password="$jenkins_password" --email="dummy@jenkins.com" --admin
 add-ssh-pubkey-to-gogs-user -username $jenkins_username -password $jenkins_password -keyname "jenkins-gogs-sshpublickey" -pubkey "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7P2N1mTzUuhra66E05uh3tyB/Tvm1gZj6y0vdUhvlRefRj7nJARmd/O0yhpE6rmfUnBVvyNuYx+dgXlnWZGh+lWhuyybc3qWMCBgTJ4RArAwimhJDAZmeb3h1FDRrEjvnR0UvO+stw7sK+sX+Ud+kAQ7XJy+XzT5S0QCp/Xzabl7UXAZVCL0qvtdPGHcv5jcrXsnISUIU0pLt7vIR2kZxbGp09A1XxYwJYLJjdFGduW7kKtGg/K7dBZEHl71nTW+Ikc5fD6kfC9o8y3JYQoXPdkbhiGEJmSrQnssuMS3EFUiooXgupohmSBx1/xQ8huOXJN3bsJ8WhJVeByODU+Ap jenkins-gogs"
 
 # Create a repository and a Jenkins job per template
-$admin_token = get-gogs-token -token_username $admin_username -token_password $admin_password -token_name "admin-token"
-$Headers = @{Authorization = "token $admin_token" }
 foreach ($template in Get-ChildItem -Path "$templates_path") {
   $templatename = $template.Name
-  Write-Host "Installing platform template - $templatename"
+  Write-Host "Installing platform template - $templatename" -ForegroundColor Yellow
 
   # Check if the repo is already there and should be reset
+  $admin_token = get-gogs-token -token_username $admin_username -token_password $admin_password -token_name "admin-token"
+  $Headers = @{Authorization = "token $admin_token" }
   $repos = Invoke-WebRequest -Uri "$gogs_url/api/v1/user/repos" -Headers $Headers
   $reposArray = convertFrom-json $repos
   $createRepo = $null
@@ -94,7 +94,7 @@ foreach ($template in Get-ChildItem -Path "$templates_path") {
 
   if ($createRepo) {
     # create the repository
-    Write-Host "Creating repository for tempalte $templatename"
+    Write-Host "Creating repository for tempalte $templatename"  -ForegroundColor DarkCyan
     $body = '{"name":"' + $templatename + '"}'
     Invoke-WebRequest -Uri "$gogs_url/api/v1/user/repos" -Headers $Headers -Method POST -ContentType "application/json" -Body $body 
 
@@ -107,48 +107,50 @@ foreach ($template in Get-ChildItem -Path "$templates_path") {
 
     # Create a ssh key to be used by the init container & coder to access Gogs using ssh
     if (!(Test-Path ~/.ssh/id_rsa.pub)) {
-      Write-Host "Creating init container ssh key"
-      docker exec -u coder controlcenter-codeserver-1 ssh-keygen -t rsa -b 1024 -f /home/coder/.ssh/id_rsa -q -N '""'
-      docker exec -u coder controlcenter-codeserver-1 ssh-keyscan -H $gogs_host >> /home/coder/.ssh/known_hosts
+      Write-Host "Creating init container ssh key" -ForegroundColor DarkCyan
+      docker exec -u coder devops-factory-control-center-codeserver-1 ssh-keygen -t rsa -b 1024 -f /home/coder/.ssh/id_rsa -q -N '""'
+      docker exec -u coder devops-factory-control-center-codeserver-1 ssh-keyscan -H $gogs_host >> /home/coder/.ssh/known_hosts
     
-      Write-Host "Displaying /home/coder/.ssh content"
-      docker exec -u coder controlcenter-codeserver-1 bash -c "ls /home/coder/.ssh -ls"
+      Write-Host "Displaying /home/coder/.ssh content"  -ForegroundColor DarkCyan
+      docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "ls /home/coder/.ssh -ls"
     }
 
-    Write-Host "Adding init container ssh key to gogs"
+    Write-Host "Adding init container ssh key to gogs" -ForegroundColor DarkCyan
+    get-childitem /home/coder/.ssh
     $currentUserSshKey = get-content -path "/home/coder/.ssh/id_rsa.pub"
     Invoke-WebRequest -Uri "$gogs_url/api/v1/user/keys" -Headers $Headers -Method POST -ContentType "application/json" -Body "{`"title`":`"${admin_username}_coder`", `"key`":`"$currentUserSshKey`"}"
 
-    Write-Host "Configuring coder git"
-    docker exec -u coder controlcenter-codeserver-1 git config --global user.email $admin_email
-    docker exec -u coder controlcenter-codeserver-1 git config --global user.name "Initialization script"
+    Write-Host "Configuring coder git" -ForegroundColor DarkCyan
+    docker exec -u coder devops-factory-control-center-codeserver-1 git config --global user.email $admin_email
+    docker exec -u coder devops-factory-control-center-codeserver-1 git config --global user.name "Initialization script"
 
     # Write-Host "Cleaning $coder_platforms_path"
     # Get-ChildItem -Path $coder_platforms_path -Recurse| Foreach-object { Remove-item -Recurse -path $_.FullName }
 
-    Write-Host "Cloning $templatename in coder"
-    docker exec -u coder controlcenter-codeserver-1 bash -c "echo 'ssh folder content:' && ls /home/coder/.ssh -ls"
-    docker exec -u coder controlcenter-codeserver-1 bash -c "echo '/home/coder/platforms folder content:' && ls /home/coder/platforms -ls"
-    docker exec -u coder controlcenter-codeserver-1 bash -c "echo 'cloning' && cd /home/coder/platforms && ls -la && git clone git@${gogs_host}:$admin_username/$templatename.git"
+    Write-Host "Cloning $templatename in coder" -ForegroundColor DarkCyan
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "echo 'ssh folder content:' && ls /home/coder/.ssh -ls"
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "echo '/home/coder/platforms folder content:' && ls /home/coder/platforms -ls"
+    # docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "rm -rf /home/coder/platforms"
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "echo 'cloning' && cd /home/coder/platforms && ls -la && git clone git@${gogs_host}:$admin_username/$templatename.git"
     start-sleep 5 # wait until the clone operation is finished
 
-    Write-Host "Add template files to local repository"
+    Write-Host "Add template files to local repository" -ForegroundColor DarkCyan
     dir $templates_path
     dir $templates_path/$templatename
     Copy-Item -Path $templates_path/$templatename -Destination $coder_platforms_path -Recurse -Force
-    docker exec -u coder controlcenter-codeserver-1 bash -c "ls $coder_platforms_path -ls"
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "ls $coder_platforms_path -ls"
 
     Write-Host "git add"
-    docker exec -u coder controlcenter-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git add ."
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git add ."
 
     Write-Host "git commit"
-    docker exec -u coder controlcenter-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git commit -m 'Initial commit'"
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git commit -m 'Initial commit'"
 
     Write-Host "git push"
-    docker exec -u coder controlcenter-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git push"
+    docker exec -u coder devops-factory-control-center-codeserver-1 bash -c "cd /home/coder/platforms/$templatename && git push"
 
     # Create the Jenkins job according to the template Jenkins-pieline-config.xml file
-    Write-Host "Creating Jenkins job"
+    Write-Host "Creating Jenkins job" -ForegroundColor DarkCyan
     $crumb_request = curl -u ${admin_username}:${admin_password} $jenkins_url/crumbIssuer/api/json
     $jenkins_crumb = ($crumb_request | ConvertFrom-Json).crumb
     $pair = "${admin_username}:${admin_password}"

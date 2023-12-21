@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:2.344
+FROM jenkins/jenkins:2.435
 ARG admin_username
 ARG admin_password
 

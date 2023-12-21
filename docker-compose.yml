@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+  # Database where the git repositories (gogs) are  stored
   gogsdb:
     image: postgres:9.5
     restart: always
@@ -11,6 +12,8 @@ services:
       - "PGDATA=/data"
     volumes:
        - ./data/gogs-db:/data:z
+  
+  # Git server
   gogs:
     image: gogs/gogs:0.12
     restart: always
@@ -32,6 +35,8 @@ services:
       retries: 5
       start_period: 20s
       timeout: 10s
+  
+  # CI/CD server
   jenkins:
       build:
         context: jenkins
@@ -44,6 +49,10 @@ services:
         - "8080:8080"
       volumes:
         - //var/run/docker.sock:/var/run/docker.sock
+      depends_on:
+        - gogs
+  
+  # Code editor
   codeserver:
       image:  codercom/code-server:latest
       volumes:
@@ -52,6 +61,8 @@ services:
         - ./platforms:/home/coder/platforms
       ports:
         - 8081:8080
+  
+  # Glueing code
   init:
     build:
       context: init
@@ -59,6 +70,7 @@ services:
       - gogs
     links:
       - gogs
+      - jenkins
     environment:
       gogs_host: gogs
       gogs_url: http://gogs:3000
@@ -69,9 +81,10 @@ services:
     volumes:
       - //var/run/docker.sock:/var/run/docker.sock
       - ./platform-templates:/platform-templates
-      # - ./platforms:/platforms:rw
-      # - ./data/coder-ssh:/coder-ssh-keys
+      - ./platforms:/platforms:rw
+      - ./data/coder-ssh:/home/coder/.ssh
     volumes_from:
       - codeserver:rw # import /home/coder/.config; /home/coder/.ssh; /home/platforms
       # - ./data/init/root:/root:rw
     restart: on-failure
+    

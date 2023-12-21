@@ -25,12 +25,23 @@ jenkins:
 unclassified:
   location:
     url: "${JENKINS_HOST}"
-  themeManager:
-    disableUserThemes: true
-    theme: "material-indigo"
+  # themeManager:
+  #   disableUserThemes: true
+  #   theme: "material-indigo"
+
 security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  gitHooks:
+    allowedOnAgents: false
+    allowedOnController: false
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "acceptFirstConnectionStrategy"
   globalJobDslSecurityConfiguration:
     useScriptSecurity: false
+  
 credentials:
   system:
     domainCredentials:
